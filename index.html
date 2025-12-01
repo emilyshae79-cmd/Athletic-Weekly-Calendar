@@ -284,7 +284,21 @@
       font-weight: 700;
     }
 
-    /* Image box on right side */
+    .schedule-grid {
+      flex: 1; /* takes remaining height so image box sits at bottom */
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-auto-rows: auto;
+      gap: 0.4rem;
+    }
+
+    @media (max-width: 900px) {
+      .schedule-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    /* Image box on bottom-right side */
     .image-box {
       align-self: flex-end;
       width: 28%;
@@ -295,33 +309,12 @@
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
-      margin-bottom: 0.35rem;
+      margin-top: 0.35rem;
     }
 
     @media (max-width: 900px) {
       .image-box {
         width: 35%;
-      }
-    }
-
-    @media (max-width: 720px) {
-      .image-box {
-        width: 50%;
-        align-self: center;
-      }
-    }
-
-    .schedule-grid {
-      flex: 1;
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      grid-auto-rows: auto;
-      gap: 0.4rem;
-    }
-
-    @media (max-width: 900px) {
-      .schedule-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
     }
 
@@ -336,6 +329,10 @@
       }
       .schedule-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .image-box {
+        width: 50%;
+        align-self: center;
       }
     }
 
@@ -520,9 +517,9 @@
       </div>
 
       <div class="field-group">
-        <label for="bgImageInput">Picture Box Image (right side)</label>
+        <label for="bgImageInput">Picture Box Image (bottom right)</label>
         <input id="bgImageInput" type="file" accept="image/*" />
-        <small>Upload a field, logo, or action shot. It appears in the photo box on the right.</small>
+        <small>Upload a field, logo, or action shot. It appears in the photo box at the bottom right.</small>
       </div>
 
       <hr style="border-color:#333;margin:0.6rem 0" />
@@ -557,7 +554,7 @@
             <div class="side-line small" id="sideLine3Preview">SEPTEMBER 22–28, 2024</div>
           </aside>
 
-          <!-- MAIN GRID -->
+          <!-- MAIN GRID + IMAGE -->
           <div class="main-panel">
             <div class="top-bar">
               <div class="top-bar-label" id="previewHeadline">THIS WEEK IN</div>
@@ -565,11 +562,11 @@
               <div class="top-bar-dates" id="previewSubtitle">SEP 22 – SEP 28</div>
             </div>
 
-            <div class="image-box" id="imageBox"></div>
-
             <div class="schedule-grid" id="scheduleGrid">
               <!-- Day cards injected by JS -->
             </div>
+
+            <div class="image-box" id="imageBox"></div>
           </div>
         </div>
         <div class="accent-bar"></div>
@@ -826,5 +823,7 @@
   </script>
 </body>
 </html>
+
+
 
 
