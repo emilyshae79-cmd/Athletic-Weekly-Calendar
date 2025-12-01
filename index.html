@@ -200,9 +200,6 @@
       overflow: hidden;
       padding: 0.75rem;
       color: var(--primary);
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
     }
 
     .schedule::before {
@@ -210,7 +207,7 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(circle at top left, rgba(0,0,0,0.1), rgba(0,0,0,0.45));
+        radial-gradient(circle at top left, rgba(0,0,0,0.05), rgba(0,0,0,0.25));
       pointer-events: none;
     }
 
@@ -223,40 +220,44 @@
       gap: 0.6rem;
     }
 
-    /* LEFT VERTICAL SIDE BAR */
+    /* LEFT SIDE BAR */
     .side-bar {
       width: 18%;
       min-width: 90px;
       background: var(--side-bg);
       border-radius: 12px;
-      padding: 0.4rem 0.3rem;
+      padding: 0.5rem 0.35rem;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: space-between;
       align-items: center;
       color: var(--side-text);
       text-align: center;
       position: relative;
       overflow: hidden;
-      gap: 0.35rem;
+      gap: 0.5rem;
     }
 
     .side-line {
-      writing-mode: vertical-rl;     /* vertical text */
-      text-orientation: mixed;
       font-family: var(--font-header);
-      letter-spacing: 0.22em;
       text-transform: uppercase;
+      letter-spacing: 0.18em;
     }
 
     .side-line.small {
-      font-size: 0.8rem;
-      opacity: 0.95;
+      font-size: 0.75rem;
+      writing-mode: horizontal-tb;
     }
 
     .side-line.main {
-      font-size: 1.25rem;            /* bigger main side font */
+      font-size: 1.3rem;
       font-weight: 700;
+      writing-mode: horizontal-tb;
+      white-space: pre-line;
+    }
+
+    .side-line.main span {
+      display: block;   /* force double line stack */
     }
 
     /* MAIN GRID AREA */
@@ -283,11 +284,38 @@
       font-weight: 700;
     }
 
+    /* Image box on right side */
+    .image-box {
+      align-self: flex-end;
+      width: 28%;
+      max-width: 260px;
+      aspect-ratio: 4 / 3;
+      border-radius: 16px;
+      border: 2px solid var(--accent);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      margin-bottom: 0.35rem;
+    }
+
+    @media (max-width: 900px) {
+      .image-box {
+        width: 35%;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .image-box {
+        width: 50%;
+        align-self: center;
+      }
+    }
+
     .schedule-grid {
       flex: 1;
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      grid-auto-rows: 1fr;
+      grid-auto-rows: auto;
       gap: 0.4rem;
     }
 
@@ -305,9 +333,6 @@
         flex-direction: row;
         width: 100%;
         min-height: 70px;
-      }
-      .side-line {
-        writing-mode: vertical-rl;  /* keep vertical on mobile too */
       }
       .schedule-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -327,9 +352,9 @@
     }
 
     .day-card.info-card {
-      grid-column: span 2;       /* smaller than full width */
-      max-height: 35%;
+      grid-column: span 2;
       font-size: 0.65rem;
+      align-self: stretch;
     }
 
     @media (max-width: 900px) {
@@ -340,7 +365,7 @@
 
     @media (max-width: 720px) {
       .day-card.info-card {
-        grid-column: 1 / -1;     /* full width on very small screens */
+        grid-column: 1 / -1;
       }
     }
 
@@ -366,7 +391,7 @@
     .day-events {
       margin-top: 0.17rem;
       line-height: 1.4;
-      white-space: pre-wrap; /* preserves indents */
+      white-space: pre-wrap;
       font-family: var(--font-body);
       font-size: 0.7rem;
     }
@@ -495,9 +520,9 @@
       </div>
 
       <div class="field-group">
-        <label for="bgImageInput">Background Image (optional)</label>
+        <label for="bgImageInput">Picture Box Image (right side)</label>
         <input id="bgImageInput" type="file" accept="image/*" />
-        <small>Use a field/stadium photo, logo, etc. Image stays in the browser only.</small>
+        <small>Upload a field, logo, or action shot. It appears in the photo box on the right.</small>
       </div>
 
       <hr style="border-color:#333;margin:0.6rem 0" />
@@ -539,6 +564,8 @@
               <div class="top-bar-title" id="previewSchool">TERRELL TIGER ATHLETICS</div>
               <div class="top-bar-dates" id="previewSubtitle">SEP 22 – SEP 28</div>
             </div>
+
+            <div class="image-box" id="imageBox"></div>
 
             <div class="schedule-grid" id="scheduleGrid">
               <!-- Day cards injected by JS -->
@@ -645,7 +672,7 @@
       dayColumns.push({ dateEl, eventsEl, card });
     });
 
-    // Important Information card – smaller
+    // Important Information card
     const infoCard = document.createElement("div");
     infoCard.className = "day-card info-card";
 
@@ -695,11 +722,22 @@
 
       // Side bar text
       const side1 = document.getElementById("sideLine1").value || "Terrell High School";
-      const side2 = document.getElementById("sideLine2").value || "Tiger Athletics";
+      const side2Raw = document.getElementById("sideLine2").value || "Tiger Athletics";
       const side3Input = document.getElementById("sideLine3").value;
       const side3 = side3Input || rangeText || "";
+
       document.getElementById("sideLine1Preview").textContent = side1.toUpperCase();
-      document.getElementById("sideLine2Preview").textContent = side2.toUpperCase();
+
+      // Split line 2 into up to two stacked lines
+      const words = side2Raw.toUpperCase().trim().split(/\s+/);
+      let side2HTML = "";
+      if (words.length <= 1) {
+        side2HTML = words[0] || "";
+      } else {
+        side2HTML = `<span>${words[0]}</span><span>${words.slice(1).join(" ")}</span>`;
+      }
+      document.getElementById("sideLine2Preview").innerHTML = side2HTML;
+
       document.getElementById("sideLine3Preview").textContent = side3.toUpperCase();
 
       // Dates in day cards
@@ -730,19 +768,19 @@
 
     document.getElementById("updateBtn").addEventListener("click", updatePreview);
 
-    // Background image
+    // Picture box image
     const bgInput = document.getElementById("bgImageInput");
-    const scheduleEl = document.getElementById("schedule");
+    const imageBox = document.getElementById("imageBox");
 
     bgInput.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) {
-        scheduleEl.style.backgroundImage = "";
+        imageBox.style.backgroundImage = "";
         return;
       }
       const reader = new FileReader();
       reader.onload = (ev) => {
-        scheduleEl.style.backgroundImage = `url('${ev.target.result}')`;
+        imageBox.style.backgroundImage = `url('${ev.target.result}')`;
       };
       reader.readAsDataURL(file);
     });
@@ -788,3 +826,5 @@
   </script>
 </body>
 </html>
+
+
